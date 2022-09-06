@@ -2,7 +2,7 @@ export const Pair = (props: {
   center: Array<number>,
   radius: number,
   sample: number,
-  gradient: number,
+  gradient: string,
   exponent: number
 }) => {
   const { radius, center, gradient, exponent } = props
@@ -11,7 +11,7 @@ export const Pair = (props: {
 
   return <g strokeWidth="20">
     <circle cx={center[0]} cy={center[1]} r={radius} style={{
-      stroke: "url(#Color" + gradient + ")",
+      stroke: gradient,
       fill: "none",
       transformOrigin: "center",
       strokeLinecap: "round",
@@ -20,7 +20,7 @@ export const Pair = (props: {
       strokeDashoffset: circumference * sample
     }} ></circle>
     <circle cx={center[0]} cy={center[1]} r={radius} style={{
-      stroke: "url(#Color" + gradient + ")",
+      stroke: gradient,
       fill: "none",
       transformOrigin: "center",
       strokeLinecap: "round",

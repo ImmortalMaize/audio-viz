@@ -1,25 +1,35 @@
 import { visualizeAudio } from "@remotion/media-utils"
 import { SVGAttributes, useMemo } from "react"
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion"
+import { AbsoluteFill, interpolate, Sequence, useCurrentFrame, useVideoConfig } from "remotion"
 import { Dernier } from "./VisualiserComponents/Dernier"
 import { Pair } from "./VisualiserComponents/Pair"
 import { Premier } from "./VisualiserComponents/Premier"
 import chroma from 'chroma-js'
+import { VisualiserConfig } from "./static/config"
 
 export const Visualiser = (props: {
-  samples: Array<number>,
-  frequencies: Array<number>
+  frequencies: Array<number>,
+  gradient: [string, string],
+  process: VisualiserConfig["process"],
+  config: VisualiserConfig
 }) => {
-  const { samples, frequencies } = props
+  const {frequencies, config, gradient, process} = props
+  const samples = frequencies.map(frequency => {
+		const { minDb, maxDb } = process
+    
+		const db = 40*Math.log10(frequency)
+		const scaled = (db - minDb) / (maxDb - minDb);
+ 
+  	return scaled;
+	})
   const frame = useCurrentFrame()
   const factor = 600
-  const circumference = (factor / 2) * Math.PI
   const { width, height } = useVideoConfig()
   const center = [factor / 2, factor / 2]
 
   const rotation = interpolate(frame, [0, 20], [0, 20])
-  const scale = chroma.scale(["#fcd303", "#00a9d4"])
-  const pourDernier = chroma.scale(["#ffffff", "#00a9d4"])
+  const scale = chroma.scale([gradient[0], gradient[1]])
+  const pourDernier = chroma.scale(["#ffffff", gradient[1]])
   const colors = useMemo(() => {
     const colors = []
 
@@ -40,7 +50,7 @@ export const Visualiser = (props: {
   }}>
     <defs>
       <pattern id="cover" x="0" y="0" height='100%' width="100%">
-        <image x="0" y="0" width={factor * .25} height={factor * .25} href="https://m.media-amazon.com/images/I/81JCMHA84kL._SS500_.jpg">
+        <image x="0" y="0" width={factor * .25} height={factor * .25} href={config.track.art}>
         </image>
       </pattern>
     </defs>
@@ -55,19 +65,11 @@ export const Visualiser = (props: {
       transform: "translate(" + (width - factor) / 2 + "px, " + (height - factor) / 2 + "px)"
     }}>
       {
-        colors.map((set, index) => {
-          return <linearGradient id={"Color" + index}>
-            <stop offset="0%" stop-color={set[0].hex()}></stop>
-            <stop offset="100%" stop-color={set[1].hex()}></stop>
-          </linearGradient>
-        })
-      }
-      {
         Array.from(Array(samples.length - 2), (item, index) => {
-          return <Pair center={center} sample={index <= 0? frequencies[index] : samples[index]} radius={(factor*((index+2)/samples.length))/2} gradient={index}
+          return <Pair center={center} sample={index <= 0? frequencies[index] : samples[index]} radius={(factor*((index+2)/samples.length))/2} gradient={scale(index/samples.length).hex()}
           exponent={1-(index/samples.length)}></Pair>
         })
       }
-      <Dernier frame={frame} center={center} radius={(factor) / 2} scale={pourDernier} sample={frequencies[0]}></Dernier>
+      <Dernier frame={frame} center={center} radius={(factor) / 2} scale={pourDernier} twitch={process.dernierTwitch} sample={frequencies[0]}></Dernier>
     </svg></>
 }
