@@ -1,4 +1,4 @@
-import { Composition } from 'remotion';
+import { Composition, continueRender, delayRender } from 'remotion';
 import { MyComposition } from './Composition';
 import { getAudioDurationInSeconds } from "@remotion/media-utils"
 import huff from "./songs/album/03Huff.wav"
@@ -11,15 +11,31 @@ import fluff from "./songs/album/07Fluff.wav"
 import solanin from "./songs/album/08solanin.wav"
 
 import { defaults } from './static/config';
+import { useCallback, useEffect, useState } from 'react';
 
 export const RemotionVideo: React.FC = () => {
+	const [durationInSeconds, defineDurationInSeconds] = useState(0)
+
+	const [delay] = useState(delayRender())
+	const defineDuration = useCallback(async () => {
+		const duration = await getAudioDurationInSeconds(boris)
+		defineDurationInSeconds(duration)
+		console.log(duration)
+
+		continueRender(delay)
+	}, [])
+
+	useEffect(() => {
+		defineDuration()
+	}, [])
+
 
 	return (
 		<>
 			<Composition
 				id="MyComp"
 				component={MyComposition}
-				durationInFrames={4426} //you'll have to adjust this manually until i figure out a way to do it automatically
+				durationInFrames={4148} //you'll have to adjust this manually until i figure out a way to do it automatically
 				fps={30}
 				width={1280}
 				height={720}
